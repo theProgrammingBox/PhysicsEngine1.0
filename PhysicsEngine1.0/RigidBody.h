@@ -11,6 +11,11 @@ public:
 	virtual void MoveVelocity(double dx, double dy) = 0;
 	virtual void UpdateVelocity(double dt) = 0;
 	virtual void Draw(olc::PixelGameEngine* pge) = 0;
+	void SetPastPosition()
+	{
+		xPastPosition = xPosition;
+		yPastPosition = yPosition;
+	}
 
 	double xPosition;
 	double yPosition;

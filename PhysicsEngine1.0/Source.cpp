@@ -1,7 +1,14 @@
 #include "LengthConstraint.h"
-#include "Gravity.h"
-#include "FixedPoint.h"
-#include "Circle.h"
+#include "GravityForce.h"
+#include "FixedPointRigidBody.h"
+#include "CircleRigidBody.h"
+#include "UserForce.h"
+
+/*
+TODO:
+1. Use constructors and destructors, rework pge and naming.
+2. Add a good user force.
+*/
 
 class SystemVisualizer : public olc::PixelGameEngine
 {
@@ -10,14 +17,13 @@ public:
 	std::vector<Force*> forces;
 	std::vector<Constraint*> constraints;
 
-	void Stimulate(double dt, double gravity)
+	void Stimulate(double dt)
 	{
 		for (Force* force : forces)
 			force->Apply(dt);
 		for (RigidBody* rigidBody : rigidBodies)
 		{
-			rigidBody->xPastPosition = rigidBody->xPosition;
-			rigidBody->yPastPosition = rigidBody->yPosition;
+			rigidBody->SetPastPosition();
 			rigidBody->MovePosition(rigidBody->xVelocity * dt, rigidBody->yVelocity * dt);
 		}
 		for (Constraint* constraint : constraints)
@@ -42,41 +48,41 @@ public:
 	
 	bool OnUserCreate() override
 	{
-		FixedPoint* fixedPoint = new FixedPoint();
-		fixedPoint->xPosition = ScreenWidth() / 2;
-		fixedPoint->yPosition = ScreenHeight() / 2;
-		fixedPoint->xVelocity = 0;
-		fixedPoint->yVelocity = 0;
-		fixedPoint->radius = 10;
-		fixedPoint->inverseMass = 0.0f;
-		rigidBodies.push_back(fixedPoint);
+		FixedPointRigidBody* fixedPointRigidBody = new FixedPointRigidBody();
+		fixedPointRigidBody->xPosition = ScreenWidth() / 2;
+		fixedPointRigidBody->yPosition = ScreenHeight() / 2;
+		fixedPointRigidBody->xVelocity = 0;
+		fixedPointRigidBody->yVelocity = 0;
+		fixedPointRigidBody->radius = 10;
+		fixedPointRigidBody->inverseMass = 0.0f;
+		rigidBodies.push_back(fixedPointRigidBody);
 		
-		Circle* circle = new Circle();
-		circle->xPosition = rigidBodies[0]->xPosition + 100;
-		circle->yPosition = rigidBodies[0]->yPosition;
-		circle->xVelocity = 0;
-		circle->yVelocity = 0;
-		circle->radius = 10;
-		circle->inverseMass = 1.0f / (circle->radius * circle->radius * M_PI);
-		rigidBodies.push_back(circle);
+		CircleRigidBody* circleRigidBody = new CircleRigidBody();
+		circleRigidBody->xPosition = rigidBodies[0]->xPosition + 100;
+		circleRigidBody->yPosition = rigidBodies[0]->yPosition;
+		circleRigidBody->xVelocity = 0;
+		circleRigidBody->yVelocity = 0;
+		circleRigidBody->radius = 10;
+		circleRigidBody->inverseMass = 1.0f / (circleRigidBody->radius * circleRigidBody->radius * M_PI);
+		rigidBodies.push_back(circleRigidBody);
 
-		Circle* circle2 = new Circle();
-		circle2->xPosition = rigidBodies[1]->xPosition + 100;
-		circle2->yPosition = rigidBodies[1]->yPosition;
-		circle2->xVelocity = 0;
-		circle2->yVelocity = 0;
-		circle2->radius = 10;
-		circle2->inverseMass = 1.0f / (circle2->radius * circle2->radius * M_PI);
-		rigidBodies.push_back(circle2);
+		CircleRigidBody* circleRigidBody2 = new CircleRigidBody();
+		circleRigidBody2->xPosition = rigidBodies[1]->xPosition + 100;
+		circleRigidBody2->yPosition = rigidBodies[1]->yPosition;
+		circleRigidBody2->xVelocity = 0;
+		circleRigidBody2->yVelocity = 0;
+		circleRigidBody2->radius = 10;
+		circleRigidBody2->inverseMass = 1.0f / (circleRigidBody2->radius * circleRigidBody2->radius * M_PI);
+		rigidBodies.push_back(circleRigidBody2);
 
-		Circle* circle3 = new Circle();
-		circle3->xPosition = rigidBodies[2]->xPosition + 100;
-		circle3->yPosition = rigidBodies[2]->yPosition;
-		circle3->xVelocity = 0;
-		circle3->yVelocity = 0;
-		circle3->radius = 10;
-		circle3->inverseMass = 1.0f / (circle3->radius * circle3->radius * M_PI);
-		rigidBodies.push_back(circle3);
+		CircleRigidBody* circleRigidBody3 = new CircleRigidBody();
+		circleRigidBody3->xPosition = rigidBodies[2]->xPosition + 100;
+		circleRigidBody3->yPosition = rigidBodies[2]->yPosition;
+		circleRigidBody3->xVelocity = 0;
+		circleRigidBody3->yVelocity = 0;
+		circleRigidBody3->radius = 10;
+		circleRigidBody3->inverseMass = 1.0f / (circleRigidBody3->radius * circleRigidBody3->radius * M_PI);
+		rigidBodies.push_back(circleRigidBody3);
 		
 		LengthConstraint* lengthConstraint = new LengthConstraint();
 		lengthConstraint->length = 100;
@@ -96,10 +102,16 @@ public:
 		lengthConstraint3->body2 = rigidBodies[3];
 		constraints.push_back(lengthConstraint3);
 
-		Gravity* gravity = new Gravity();
-		gravity->gravity = 9.8f;
-		gravity->rigidBodies = rigidBodies;
-		forces.push_back(gravity);
+		GravityForce* gravityForce = new GravityForce();
+		gravityForce->force = 9.8f;
+		gravityForce->rigidBodies = &rigidBodies;
+		forces.push_back(gravityForce);
+
+		UserForce* userForce = new UserForce();
+		userForce->force = 1.0f;
+		userForce->rigidBodies = &rigidBodies;
+		userForce->pge = this;
+		forces.push_back(userForce);
 		
 		return true;
 	}
@@ -109,10 +121,9 @@ public:
 		/*if (GetKey(olc::SPACE).bPressed)
 		{*/
 			int substeps = 1000;
-			double dt = 1.0f / 10.0f / substeps;
-			double gravity = 9.8;
-			for (int i = 0; i < substeps; i++)
-				Stimulate(dt, gravity);
+			double dt = 1.0f / 60.0f / substeps;
+			for (int i = substeps; i--;)
+				Stimulate(dt);
 		//}
 
 		DrawSystem();

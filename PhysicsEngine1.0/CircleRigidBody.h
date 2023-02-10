@@ -1,11 +1,11 @@
 #pragma once
 #include "RigidBody.h"
 
-class Circle : public RigidBody
+class CircleRigidBody : public RigidBody
 {
 public:
-	Circle() {};
-	virtual ~Circle() {};
+	CircleRigidBody() {};
+	virtual ~CircleRigidBody() {};
 
 	void MovePosition(double dx, double dy) override
 	{

@@ -1,11 +1,11 @@
 #pragma once
 #include "RigidBody.h"
 
-class FixedPoint : public RigidBody
+class FixedPointRigidBody : public RigidBody
 {
 public:
-	FixedPoint() {};
-	virtual ~FixedPoint() {};
+	FixedPointRigidBody() {};
+	virtual ~FixedPointRigidBody() {};
 
 	void MovePosition(double dx, double dy) override {};
 	void MoveVelocity(double dx, double dy) override {};

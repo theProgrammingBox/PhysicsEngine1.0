@@ -26,16 +26,16 @@
     <ClInclude Include="RigidBody.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Circle.h">
+    <ClInclude Include="CircleRigidBody.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FixedPoint.h">
+    <ClInclude Include="FixedPointRigidBody.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Force.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Gravity.h">
+    <ClInclude Include="GravityForce.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Constraint.h">
@@ -45,6 +45,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Header.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UserForce.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
