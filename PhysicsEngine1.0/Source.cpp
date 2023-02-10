@@ -7,7 +7,7 @@
 /*
 TODO:
 1. Use constructors and destructors, rework pge and naming.
-2. Add a good user force.
+2. Add a good user force. (Work on spring force)
 */
 
 class SystemVisualizer : public olc::PixelGameEngine
