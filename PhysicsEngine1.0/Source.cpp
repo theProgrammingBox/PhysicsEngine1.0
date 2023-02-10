@@ -11,6 +11,7 @@ public:
 	virtual void MovePosition(double dx, double dy) = 0;
 	virtual void MoveVelocity(double dx, double dy) = 0;
 	virtual void UpdateVelocity(double dt) = 0;
+	virtual void Draw(olc::PixelGameEngine* pge) = 0;
 	
 	double xPosition;
 	double yPosition;
@@ -45,6 +46,12 @@ public:
 		xVelocity = (xPosition - xPastPosition) / dt;
 		yVelocity = (yPosition - yPastPosition) / dt;
 	}
+	
+	void Draw(olc::PixelGameEngine* pge) override
+	{
+		pge->DrawCircle(xPosition, yPosition, radius, olc::WHITE);
+		pge->DrawLine(xPosition, yPosition, xPosition + xVelocity, yPosition + yVelocity, olc::RED);
+	}
 };
 
 class FixedPoint : public RigidBody
@@ -56,6 +63,10 @@ public:
 	void MovePosition(double dx, double dy) override {};
 	void MoveVelocity(double dx, double dy) override {};
 	void UpdateVelocity(double dt) override {};
+	void Draw(olc::PixelGameEngine* pge) override
+	{
+		pge->DrawCircle(xPosition, yPosition, radius, olc::WHITE);
+	}
 };
 
 class Force
@@ -65,6 +76,7 @@ public:
 	virtual ~Force() {};
 
 	virtual void Apply(double dt) = 0;
+	virtual void Draw(olc::PixelGameEngine* pge) = 0;
 };
 
 class Gravity : public Force
@@ -78,6 +90,12 @@ public:
 		for (RigidBody* rigidBody : rigidBodies)
 			rigidBody->MoveVelocity(0, gravity * dt);
 	}
+	
+	void Draw(olc::PixelGameEngine* pge) override
+	{
+		for (RigidBody* rigidBody : rigidBodies)
+			pge->DrawLine(rigidBody->xPosition, rigidBody->yPosition, rigidBody->xPosition, rigidBody->yPosition + gravity, olc::BLUE);
+	}
 
 	double gravity;
 	std::vector<RigidBody*> rigidBodies;
@@ -90,6 +108,7 @@ public:
 	virtual ~Constraint() {};
 
 	virtual void Apply() = 0;
+	virtual void Draw(olc::PixelGameEngine* pge) = 0;
 };
 
 class LengthConstraint : public Constraint
@@ -107,6 +126,11 @@ public:
 		body1->MovePosition(-xDistance * correction * body1->inverseMass, -yDistance * correction * body1->inverseMass);
 		body2->MovePosition(xDistance * correction * body2->inverseMass, yDistance * correction * body2->inverseMass);
 	}
+
+	void Draw(olc::PixelGameEngine* pge) override
+	{
+		pge->DrawLine(body1->xPosition, body1->yPosition, body2->xPosition, body2->yPosition, olc::GREEN);
+	}
 	
 	double length;
 	RigidBody* body1;
@@ -119,42 +143,6 @@ public:
 	std::vector<RigidBody*> rigidBodies;
 	std::vector<Force*> forces;
 	std::vector<Constraint*> constraints;
-	
-	SystemVisualizer() { sAppName = "System Visualizer"; }
-	
-	bool OnUserCreate() override
-	{
-		FixedPoint* fixedPoint = new FixedPoint();
-		fixedPoint->xPosition = ScreenWidth() / 2;
-		fixedPoint->yPosition = ScreenHeight() / 2;
-		fixedPoint->xVelocity = 0;
-		fixedPoint->yVelocity = 0;
-		fixedPoint->radius = 10;
-		fixedPoint->inverseMass = 0.0f;
-		rigidBodies.push_back(fixedPoint);
-		
-		Circle* circle = new Circle();
-		circle->xPosition = ScreenWidth() / 3;
-		circle->yPosition = ScreenHeight() / 3;
-		circle->xVelocity = 0;
-		circle->yVelocity = 0;
-		circle->radius = 10;
-		circle->inverseMass = 1.0f / (circle->radius * circle->radius * M_PI);
-		rigidBodies.push_back(circle);
-		
-		LengthConstraint* lengthConstraint = new LengthConstraint();
-		lengthConstraint->length = 100;
-		lengthConstraint->body1 = rigidBodies[0];
-		lengthConstraint->body2 = rigidBodies[1];
-		constraints.push_back(lengthConstraint);
-
-		Gravity* gravity = new Gravity();
-		gravity->gravity = 9.8f;
-		gravity->rigidBodies = rigidBodies;
-		forces.push_back(gravity);
-		
-		return true;
-	}
 
 	void Stimulate(double dt, double gravity)
 	{
@@ -175,23 +163,79 @@ public:
 	void DrawSystem()
 	{
 		Clear(olc::BLACK);
-		
-		for (RigidBody* rigidBody : rigidBodies)
-		{
-			DrawCircle(rigidBody->xPosition, rigidBody->yPosition, rigidBody->radius, olc::WHITE);
-			DrawLine(rigidBody->xPosition, rigidBody->yPosition, rigidBody->xPosition + rigidBody->xVelocity, rigidBody->yPosition + rigidBody->yVelocity, olc::RED);
-		}
 
+		for (RigidBody* rigidBody : rigidBodies)
+			rigidBody->Draw(this);
+		for (Force* force : forces)
+			force->Draw(this);
 		for (Constraint* constraint : constraints)
-		{
-			LengthConstraint* lengthConstraint = dynamic_cast<LengthConstraint*>(constraint);
-			if (lengthConstraint)
-			{
-				RigidBody* body1 = lengthConstraint->body1;
-				RigidBody* body2 = lengthConstraint->body2;
-				DrawLine(body1->xPosition, body1->yPosition, body2->xPosition, body2->yPosition, olc::GREEN);
-			}
-		}
+			constraint->Draw(this);
+	}
+	
+	SystemVisualizer() { sAppName = "System Visualizer"; }
+	
+	bool OnUserCreate() override
+	{
+		FixedPoint* fixedPoint = new FixedPoint();
+		fixedPoint->xPosition = ScreenWidth() / 2;
+		fixedPoint->yPosition = ScreenHeight() / 2;
+		fixedPoint->xVelocity = 0;
+		fixedPoint->yVelocity = 0;
+		fixedPoint->radius = 10;
+		fixedPoint->inverseMass = 0.0f;
+		rigidBodies.push_back(fixedPoint);
+		
+		Circle* circle = new Circle();
+		circle->xPosition = rigidBodies[0]->xPosition + 100;
+		circle->yPosition = rigidBodies[0]->yPosition;
+		circle->xVelocity = 0;
+		circle->yVelocity = 0;
+		circle->radius = 10;
+		circle->inverseMass = 1.0f / (circle->radius * circle->radius * M_PI);
+		rigidBodies.push_back(circle);
+
+		Circle* circle2 = new Circle();
+		circle2->xPosition = rigidBodies[1]->xPosition + 100;
+		circle2->yPosition = rigidBodies[1]->yPosition;
+		circle2->xVelocity = 0;
+		circle2->yVelocity = 0;
+		circle2->radius = 10;
+		circle2->inverseMass = 1.0f / (circle2->radius * circle2->radius * M_PI);
+		rigidBodies.push_back(circle2);
+
+		Circle* circle3 = new Circle();
+		circle3->xPosition = rigidBodies[2]->xPosition + 100;
+		circle3->yPosition = rigidBodies[2]->yPosition;
+		circle3->xVelocity = 0;
+		circle3->yVelocity = 0;
+		circle3->radius = 10;
+		circle3->inverseMass = 1.0f / (circle3->radius * circle3->radius * M_PI);
+		rigidBodies.push_back(circle3);
+		
+		LengthConstraint* lengthConstraint = new LengthConstraint();
+		lengthConstraint->length = 100;
+		lengthConstraint->body1 = rigidBodies[0];
+		lengthConstraint->body2 = rigidBodies[1];
+		constraints.push_back(lengthConstraint);
+
+		LengthConstraint* lengthConstraint2 = new LengthConstraint();
+		lengthConstraint2->length = 100;
+		lengthConstraint2->body1 = rigidBodies[1];
+		lengthConstraint2->body2 = rigidBodies[2];
+		constraints.push_back(lengthConstraint2);
+
+		LengthConstraint* lengthConstraint3 = new LengthConstraint();
+		lengthConstraint3->length = 100;
+		lengthConstraint3->body1 = rigidBodies[2];
+		lengthConstraint3->body2 = rigidBodies[3];
+		constraints.push_back(lengthConstraint3);
+
+		Gravity* gravity = new Gravity();
+		gravity->gravity = 9.8f;
+		gravity->rigidBodies = rigidBodies;
+		forces.push_back(gravity);
+		
+		return true;
 	}
 
 	bool OnUserUpdate(float fElapsedTime) override
