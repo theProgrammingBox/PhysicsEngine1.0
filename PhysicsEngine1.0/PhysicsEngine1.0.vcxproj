@@ -130,7 +130,15 @@
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Circle.h" />
+    <ClInclude Include="Constraint.h" />
+    <ClInclude Include="FixedPoint.h" />
+    <ClInclude Include="Force.h" />
+    <ClInclude Include="Gravity.h" />
+    <ClInclude Include="Header.h" />
+    <ClInclude Include="LengthConstraint.h" />
     <ClInclude Include="olcPixelGameEngine.h" />
+    <ClInclude Include="RigidBody.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
